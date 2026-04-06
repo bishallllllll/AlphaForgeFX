@@ -20,6 +20,7 @@ from .managers.research_manager import create_research_manager
 from .managers.portfolio_manager import create_portfolio_manager
 
 from .trader.trader import create_trader
+from .trader.forex_trader import create_forex_trader
 
 __all__ = [
     "FinancialSituationMemory",
@@ -39,6 +40,7 @@ __all__ = [
     "create_conservative_debator",
     "create_social_media_analyst",
     "create_trader",
+    "create_forex_trader",
     "create_macro_analyst",
     "create_forex_market_analyst",
 ]
