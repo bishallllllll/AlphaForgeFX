@@ -51,3 +51,34 @@ def get_insider_transactions(
         str: A report of insider transaction data
     """
     return route_to_vendor("get_insider_transactions", ticker)
+
+@tool
+def get_forex_news(
+    pair: Annotated[str, "Currency pair (e.g., EURUSD)"],
+    start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
+    end_date: Annotated[str, "End date in yyyy-mm-dd format"],
+) -> list:
+    """
+    Retrieve forex-specific news for a given currency pair.
+    Args:
+        pair (str): Currency pair (e.g., EURUSD)
+        start_date (str): Start date in yyyy-mm-dd format
+        end_date (str): End date in yyyy-mm-dd format
+    Returns:
+        list: A list of news articles relevant to the currency pair.
+    """
+    # Simulated data - replace with real API integration
+    return [
+        {
+            "headline": "EUR/USD rises on strong Eurozone data",
+            "source": "Forex News",
+            "date": "2024-02-01",
+            "summary": "Positive economic data from the Eurozone boosts the Euro against the Dollar."
+        },
+        {
+            "headline": "USD weakens ahead of Fed meeting",
+            "source": "MarketWatch",
+            "date": "2024-02-02",
+            "summary": "Investors await Federal Reserve's decision on interest rates."
+        }
+    ]
