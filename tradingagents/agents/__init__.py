@@ -18,9 +18,22 @@ from .risk_mgmt.neutral_debator import create_neutral_debator
 
 from .managers.research_manager import create_research_manager
 from .managers.portfolio_manager import create_portfolio_manager
+from .managers.risk_manager import create_risk_manager
 
 from .trader.trader import create_trader
 from .trader.forex_trader import create_forex_trader
+
+from .executor.executor import create_executor
+from .executor import (
+    OrderExecutor,
+    Order,
+    OrderType,
+    OrderSide,
+    PositionManager,
+    Position,
+    TradeJournal,
+    MarketMonitor,
+)
 
 __all__ = [
     "FinancialSituationMemory",
@@ -31,6 +44,7 @@ __all__ = [
     "create_bear_researcher",
     "create_bull_researcher",
     "create_research_manager",
+    "create_risk_manager",
     "create_fundamentals_analyst",
     "create_market_analyst",
     "create_neutral_debator",
@@ -39,8 +53,17 @@ __all__ = [
     "create_portfolio_manager",
     "create_conservative_debator",
     "create_social_media_analyst",
-    "create_trader",
-    "create_forex_trader",
     "create_macro_analyst",
     "create_forex_market_analyst",
+    "create_trader",
+    "create_forex_trader",
+    "create_executor",
+    "OrderExecutor",
+    "Order",
+    "OrderType",
+    "OrderSide",
+    "PositionManager",
+    "Position",
+    "TradeJournal",
+    "MarketMonitor",
 ]

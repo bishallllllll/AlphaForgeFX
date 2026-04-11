@@ -100,6 +100,7 @@ class TradingAgentsGraph:
         self.trader_memory = FinancialSituationMemory("trader_memory", self.config)
         self.invest_judge_memory = FinancialSituationMemory("invest_judge_memory", self.config)
         self.portfolio_manager_memory = FinancialSituationMemory("portfolio_manager_memory", self.config)
+        self.executor_memory = FinancialSituationMemory("executor_memory", self.config)
 
         # Create tool nodes
         self.tool_nodes = self._create_tool_nodes()
@@ -118,6 +119,7 @@ class TradingAgentsGraph:
             self.trader_memory,
             self.invest_judge_memory,
             self.portfolio_manager_memory,
+            self.executor_memory,
             self.conditional_logic,
         )
 
@@ -144,6 +146,37 @@ class TradingAgentsGraph:
                 kwargs["thinking_level"] = thinking_level
 
         elif provider == "openai":
+            # Ensure API key is available for OpenAI
+            api_key = os.getenv("OPENAI_API_KEY")
+            if api_key:
+                kwargs["api_key"] = api_key
+            else:
+                raise ValueError(
+                    "OPENAI_API_KEY environment variable is not set. "
+                    "Please set it before initializing the TradingAgentsGraph."
+                )
+            
+            reasoning_effort = self.config.get("openai_reasoning_effort")
+            if reasoning_effort:
+                kwargs["reasoning_effort"] = reasoning_effort
+
+        elif provider == "azure":
+            # Azure credentials are handled internally by AzureOpenAIClient
+            # Ensure required environment variables are set
+            api_key = os.getenv("AZURE_OPENAI_API_KEY")
+            endpoint = os.getenv("AZURE_OPENAI_ENDPOINT") or self.config.get("backend_url")
+            
+            if not api_key:
+                raise ValueError(
+                    "AZURE_OPENAI_API_KEY environment variable is not set. "
+                    "Please set it to your Azure OpenAI API key."
+                )
+            if not endpoint:
+                raise ValueError(
+                    "Azure endpoint not configured. Set either AZURE_OPENAI_ENDPOINT "
+                    "environment variable or backend_url in config."
+                )
+            
             reasoning_effort = self.config.get("openai_reasoning_effort")
             if reasoning_effort:
                 kwargs["reasoning_effort"] = reasoning_effort
@@ -157,6 +190,11 @@ class TradingAgentsGraph:
 
     def _create_tool_nodes(self) -> Dict[str, ToolNode]:
         """Create tool nodes for different data sources using abstract methods."""
+        # REVIEWER NOTE: The tools below are stock-specific. For a full forex pipeline,
+        # this should be updated to use the forex-specific data tools mentioned in
+        # API_SETUP.md and FOREX_QUICK_REFERENCE.md, such as tools for Twelve Data,
+        # Central Bank data, CFTC reports, etc. The PHASE_2_VALIDATION_REPORT.md
+        # notes that integrating new forex tools is a pending task.
         return {
             "market": ToolNode(
                 [
@@ -191,15 +229,15 @@ class TradingAgentsGraph:
             ),
         }
 
-    def propagate(self, company_name, trade_date):
+    def propagate(self, instrument, trade_date):
         """Run the trading agents graph for a company on a specific date."""
 
-        self.ticker = company_name
+        self.instrument = instrument
 
         # Initialize state
-        init_agent_state = self.propagator.create_initial_state(
-            company_name, trade_date
-        )
+        # REVIEWER NOTE: The `create_initial_state` method and AgentState should
+        # consistently use `instrument` instead of `company_of_interest`.
+        init_agent_state = self.propagator.create_initial_state(instrument, trade_date)
         args = self.propagator.get_graph_args()
 
         if self.debug:
@@ -229,7 +267,7 @@ class TradingAgentsGraph:
     def _log_state(self, trade_date, final_state):
         """Log the final state to a JSON file."""
         self.log_states_dict[str(trade_date)] = {
-            "company_of_interest": final_state["company_of_interest"],
+            "instrument": final_state.get("instrument", final_state.get("company_of_interest")),
             "trade_date": final_state["trade_date"],
             "market_report": final_state["market_report"],
             "sentiment_report": final_state["sentiment_report"],
@@ -259,7 +297,7 @@ class TradingAgentsGraph:
         }
 
         # Save to file
-        directory = Path(self.config["results_dir"]) / self.ticker / "TradingAgentsStrategy_logs"
+        directory = Path(self.config["results_dir"]) / self.instrument / "TradingAgentsStrategy_logs"
         directory.mkdir(parents=True, exist_ok=True)
 
         log_path = directory / f"full_states_log_{trade_date}.json"

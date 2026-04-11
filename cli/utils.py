@@ -180,6 +180,17 @@ def select_shallow_thinking_agent(provider) -> str:
     if provider.lower() == "openrouter":
         return select_openrouter_model()
 
+    if provider.lower() == "azure":
+        # Azure OpenAI uses deployment names; ask user for deployment name
+        choice = questionary.text(
+            "Enter Azure OpenAI deployment name (deployment name, not model ID):",
+            validate=lambda x: len(x.strip()) > 0 or "Please enter a deployment name.",
+        ).ask()
+        if not choice:
+            console.print("\n[red]No deployment name provided. Exiting...[/red]")
+            exit(1)
+        return choice.strip()
+
     choice = questionary.select(
         "Select Your [Quick-Thinking LLM Engine]:",
         choices=[
@@ -211,6 +222,17 @@ def select_deep_thinking_agent(provider) -> str:
     if provider.lower() == "openrouter":
         return select_openrouter_model()
 
+    if provider.lower() == "azure":
+        # Azure OpenAI uses deployment names; ask user for deployment name
+        choice = questionary.text(
+            "Enter Azure OpenAI deployment name for deep thinking (deployment name):",
+            validate=lambda x: len(x.strip()) > 0 or "Please enter a deployment name.",
+        ).ask()
+        if not choice:
+            console.print("\n[red]No deployment name provided. Exiting...[/red]")
+            exit(1)
+        return choice.strip()
+
     choice = questionary.select(
         "Select Your [Deep-Thinking LLM Engine]:",
         choices=[
@@ -239,6 +261,7 @@ def select_llm_provider() -> tuple[str, str | None]:
         ("OpenAI", "https://api.openai.com/v1"),
         ("Google", None),  # google-genai SDK manages its own endpoint
         ("Anthropic", "https://api.anthropic.com/"),
+        ("Azure", None),  # Azure OpenAI (enter endpoint or set AZURE_OPENAI_ENDPOINT)
         ("xAI", "https://api.x.ai/v1"),
         ("Openrouter", "https://openrouter.ai/api/v1"),
         ("Ollama", "http://localhost:11434/v1"),
@@ -286,6 +309,20 @@ def ask_openai_reasoning_effort() -> str:
             ("pointer", "fg:cyan noinherit"),
         ]),
     ).ask()
+
+
+def ask_azure_endpoint() -> str:
+    """Ask user to enter Azure OpenAI endpoint if not set in env."""
+    endpoint = questionary.text(
+        "Enter Azure OpenAI endpoint (e.g., https://<resource>.openai.azure.com/):",
+        validate=lambda x: len(x.strip()) > 0 or "Please enter a valid Azure endpoint.",
+    ).ask()
+
+    if not endpoint:
+        console.print("\n[red]No Azure endpoint provided. Exiting...[/red]")
+        exit(1)
+
+    return endpoint.strip()
 
 
 def ask_anthropic_effort() -> str | None:

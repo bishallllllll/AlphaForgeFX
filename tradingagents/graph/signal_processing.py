@@ -23,8 +23,8 @@ class SignalProcessor:
         messages = [
             (
                 "system",
-                "You are an efficient assistant that extracts the trading decision from analyst reports. "
-                "Extract the rating as exactly one of: BUY, OVERWEIGHT, HOLD, UNDERWEIGHT, SELL. "
+                "You are an efficient assistant that extracts the trading decision from forex analyst reports. "
+                "Extract the rating as exactly one of: STRONG_BUY, BUY, HOLD, SELL, STRONG_SELL. "
                 "Output only the single rating word, nothing else.",
             ),
             ("human", full_signal),
