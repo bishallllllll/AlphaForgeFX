@@ -83,3 +83,41 @@ class AgentState(MessagesState):
         RiskDebateState, "Current state of the debate on evaluating risk"
     ]
     final_trade_decision: Annotated[str, "Final decision made by the Risk Analysts"]
+    final_risk_decision: Annotated[str, "Comprehensive risk analysis and final decision from Risk Manager"]
+    risk_adjusted_signal: Annotated[str, "Risk-adjusted trading signal from Phase 4"]
+    final_entry: Annotated[float, "Final entry price approved by Risk Manager"]
+    final_stop_loss: Annotated[float, "Final stop loss adjusted by Risk Manager"]
+    final_position_size: Annotated[str, "Final position size adjusted by Risk Manager"]
+    adjustment_reason: Annotated[str, "Reason for any adjustments made in Phase 4"]
+    risk_approval_status: Annotated[str, "APPROVED, APPROVED_WITH_ADJUSTMENTS, or REJECTED"]
+
+    # Phase 5: Execution and monitoring step
+    execution_status: Annotated[str, "EXECUTED, REJECTED, INVALID, PENDING"]
+    execution_timestamp: Annotated[str, "When the order was executed"]
+    order_id: Annotated[str, "Unique order identifier"]
+    order_details: Annotated[dict, "Order execution details: entry_price, fill_price, quantity, slippage"]
+    position_id: Annotated[str, "Unique position identifier for tracking"]
+    position_tracking: Annotated[dict, "Real-time position data: entry, stop_loss, tp1, tp2, current, pnl"]
+    
+    # Monitoring fields
+    unrealized_pnl_pips: Annotated[float, "Unrealized P&L in pips"]
+    unrealized_pnl_usd: Annotated[float, "Unrealized P&L in USD"]
+    realized_pnl_pips: Annotated[float, "Realized P&L in pips"]
+    realized_pnl_usd: Annotated[float, "Realized P&L in USD"]
+    execution_slippage: Annotated[float, "Slippage in pips between expected and actual fill"]
+    execution_quality: Annotated[float, "Execution quality score 0-100 (higher is better)"]
+    
+    # Trade logging
+    trade_logged: Annotated[bool, "Whether trade was logged to journal"]
+    trade_id: Annotated[str, "Trade journal identifier"]
+    
+    # Portfolio metrics
+    portfolio_stats: Annotated[dict, "Portfolio statistics: margin used, unrealized PnL, equity"]
+    
+    # Invalidation signals
+    invalidation_reason: Annotated[str, "Reason position was invalidated/closed"]
+    market_conditions: Annotated[dict, "Current market conditions: volatility, spread, sessions"]
+    
+    # Current price tracking
+    current_price: Annotated[float, "Current market price for position monitoring"]
+    price_history: Annotated[list, "Recent price history for volatility calculation"]

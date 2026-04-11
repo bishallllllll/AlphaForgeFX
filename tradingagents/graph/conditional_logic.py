@@ -43,6 +43,14 @@ class ConditionalLogic:
             return "tools_fundamentals"
         return "Msg Clear Fundamentals"
 
+    def should_continue_macro(self, state: AgentState):
+        """Determine if macro analysis should continue."""
+        messages = state["messages"]
+        last_message = messages[-1]
+        if last_message.tool_calls:
+            return "tools_macro"
+        return "Msg Clear Macro"
+
     def should_continue_debate(self, state: AgentState) -> str:
         """Determine if debate should continue."""
 
@@ -59,7 +67,7 @@ class ConditionalLogic:
         if (
             state["risk_debate_state"]["count"] >= 3 * self.max_risk_discuss_rounds
         ):  # 3 rounds of back-and-forth between 3 agents
-            return "Portfolio Manager"
+            return "Risk Manager"  # Phase 4: Use new Risk Manager instead of Portfolio Manager
         if state["risk_debate_state"]["latest_speaker"].startswith("Aggressive"):
             return "Conservative Analyst"
         if state["risk_debate_state"]["latest_speaker"].startswith("Conservative"):

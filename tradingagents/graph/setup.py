@@ -23,6 +23,7 @@ class GraphSetup:
         trader_memory,
         invest_judge_memory,
         portfolio_manager_memory,
+        executor_memory,
         conditional_logic: ConditionalLogic,
     ):
         """Initialize with required components."""
@@ -34,6 +35,7 @@ class GraphSetup:
         self.trader_memory = trader_memory
         self.invest_judge_memory = invest_judge_memory
         self.portfolio_manager_memory = portfolio_manager_memory
+        self.executor_memory = executor_memory
         self.conditional_logic = conditional_logic
 
     def setup_graph(
@@ -84,6 +86,14 @@ class GraphSetup:
             delete_nodes["fundamentals"] = create_msg_delete()
             tool_nodes["fundamentals"] = self.tool_nodes["fundamentals"]
 
+        if "macro" in selected_analysts:
+            analyst_nodes["macro"] = create_macro_analyst(
+                self.quick_thinking_llm
+            )
+            delete_nodes["macro"] = create_msg_delete()
+            # Macro analyst uses LLM only, no tools required
+            tool_nodes["macro"] = ToolNode([])
+
         # Create researcher and manager nodes
         bull_researcher_node = create_bull_researcher(
             self.quick_thinking_llm, self.bull_memory
@@ -94,15 +104,22 @@ class GraphSetup:
         research_manager_node = create_research_manager(
             self.deep_thinking_llm, self.invest_judge_memory
         )
-        trader_node = create_trader(self.quick_thinking_llm, self.trader_memory)
+        
+        # Phase 3: Use new forex_trader for forex trading pipeline
+        trader_node = create_forex_trader(self.quick_thinking_llm, self.trader_memory)
 
         # Create risk analysis nodes
         aggressive_analyst = create_aggressive_debator(self.quick_thinking_llm)
         neutral_analyst = create_neutral_debator(self.quick_thinking_llm)
         conservative_analyst = create_conservative_debator(self.quick_thinking_llm)
-        portfolio_manager_node = create_portfolio_manager(
+        
+        # Phase 4: Use new risk_manager for risk synthesis
+        risk_manager_node = create_risk_manager(
             self.deep_thinking_llm, self.portfolio_manager_memory
         )
+        
+        # Phase 5: Create executor node for order execution and position management
+        executor_node = create_executor(self.quick_thinking_llm, self.executor_memory)
 
         # Create workflow
         workflow = StateGraph(AgentState)
@@ -123,7 +140,8 @@ class GraphSetup:
         workflow.add_node("Aggressive Analyst", aggressive_analyst)
         workflow.add_node("Neutral Analyst", neutral_analyst)
         workflow.add_node("Conservative Analyst", conservative_analyst)
-        workflow.add_node("Portfolio Manager", portfolio_manager_node)
+        workflow.add_node("Risk Manager", risk_manager_node)
+        workflow.add_node("Executor", executor_node)
 
         # Define edges
         # Start with the first analyst
@@ -175,7 +193,7 @@ class GraphSetup:
             self.conditional_logic.should_continue_risk_analysis,
             {
                 "Conservative Analyst": "Conservative Analyst",
-                "Portfolio Manager": "Portfolio Manager",
+                "Risk Manager": "Risk Manager",
             },
         )
         workflow.add_conditional_edges(
@@ -183,7 +201,7 @@ class GraphSetup:
             self.conditional_logic.should_continue_risk_analysis,
             {
                 "Neutral Analyst": "Neutral Analyst",
-                "Portfolio Manager": "Portfolio Manager",
+                "Risk Manager": "Risk Manager",
             },
         )
         workflow.add_conditional_edges(
@@ -191,11 +209,12 @@ class GraphSetup:
             self.conditional_logic.should_continue_risk_analysis,
             {
                 "Aggressive Analyst": "Aggressive Analyst",
-                "Portfolio Manager": "Portfolio Manager",
+                "Risk Manager": "Risk Manager",
             },
         )
 
-        workflow.add_edge("Portfolio Manager", END)
+        workflow.add_edge("Risk Manager", "Executor")
+        workflow.add_edge("Executor", END)
 
         # Compile and return
         return workflow.compile()
